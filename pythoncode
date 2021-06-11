@@ -1,0 +1,33 @@
+# SIT210_Final_Project
+
+import time
+import argparse
+from ws2812b import ws2812b
+from gpiozero import Button, LED, MotionSensor
+
+motion_sensor_entrance = 13;
+motion_sensor_bed = 23;
+led_pin = 18;
+LED_COUNT = 120
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(motion_sensor_bed, GPIO.IN)
+GPIO.setup(motion_sensor_entrance,GPIO.IN)
+GPIO.setup(led_pin,GPIO.OUT)
+
+def colorWipe(strip, color, wait_ms=50):
+    for i in range(strip.numPixels()):
+        strip.setPixelColor(i, color)
+        strip.show()
+        time.sleep(wait_ms/2500.0)
+        
+#test function to understand the workings **** INCOMPLETE *****
+def color_rotate():
+    for x in range(30):
+        button_red
+        
+if __name__ == '__main__':
+    # Process arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--clear', action='store_true', help='clear the display on exit')
+    args = parser.parse_args()
