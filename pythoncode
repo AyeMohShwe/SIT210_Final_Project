@@ -1,33 +1,124 @@
 # SIT210_Final_Project
 
 import time
-import argparse
-from ws2812b import ws2812b
-from gpiozero import Button, LED, MotionSensor
+import atgparse
 
-motion_sensor_entrance = 13;
-motion_sensor_bed = 23;
-led_pin = 18;
+from rpi_ws281x import ws, Color, Adafruit_NeoPixel
+import RPi.GPIO as GPIO
+
 LED_COUNT = 120
+led_pin = 18;
+led_freq = 800000
+led_brightness = 255
+led_dma = 10
+led_invert = False
+led_channel = 0
+LED_STRIP_TYPE = ws.WS2812B_STRIP_BRG
 
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(motion_sensor_bed, GPIO.IN)
-GPIO.setup(motion_sensor_entrance,GPIO.IN)
+GPIO.setup(24, GPIO.IN)
+GPIO.setup(23,GPIO.IN)
 GPIO.setup(led_pin,GPIO.OUT)
+GPIO.setup(led_pin,GPIO.LOW)
 
 def colorWipe(strip, color, wait_ms=50):
+    """Wipe color across display a pixel at a time."""
     for i in range(strip.numPixels()):
         strip.setPixelColor(i, color)
         strip.show()
-        time.sleep(wait_ms/2500.0)
+        time.sleep(wait_ms/1000)
+def theaterChase(strip, color, wait_ms=50, iterations=10):
+    """Movie theater light style chaser animation."""
+    for j in range(iterations):
+        for q in range(3):
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, color)
+            strip.show()
+            time.sleep(wait_ms/1000.0)
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, 0)
+ 
+def wheel(pos):
+    """Generate rainbow colors across 0-255 positions."""
+    if pos < 85:
+        return Color(pos * 3, 255 - pos * 3, 0)
+    elif pos < 170:
+        pos -= 85
+        return Color(255 - pos * 3, 0, pos * 3)
+    else:
+        pos -= 170
+        return Color(0, pos * 3, 255 - pos * 3)
+ 
+def rainbow(strip, wait_ms=20, iterations=1):
+    """Draw rainbow that fades across all pixels at once."""
+    for j in range(256*iterations):
+        for i in range(strip.numPixels()):
+            strip.setPixelColor(i, wheel((i+j) & 255))
+        strip.show()
+        time.sleep(wait_ms/1000.0)
+ 
+def rainbowCycle(strip, wait_ms=20, iterations=5):
+    """Draw rainbow that uniformly distributes itself across all pixels."""
+    for j in range(256*iterations):
+        for i in range(strip.numPixels()):
+            strip.setPixelColor(i, wheel((int(i * 256 / strip.numPixels()) + j) & 255))
+        strip.show()
+        time.sleep(wait_ms/1000.0)
         
-#test function to understand the workings **** INCOMPLETE *****
-def color_rotate():
-    for x in range(30):
-        button_red
+def theaterChaseRainbow(strip, wait_ms=50):
+    """Rainbow movie theater light style chaser animation."""
+    for j in range(256):
+        for q in range(3):
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, wheel((i+j) % 255))
+            strip.show()
+            time.sleep(wait_ms/1000.0)
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, 0)
         
 if __name__ == '__main__':
     # Process arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--clear', action='store_true', help='clear the display on exit')
     args = parser.parse_args()
+
+    # Create NeoPixel objects with appropriate configuration for each strip.                            │
+    strip = Adafruit_NeoPixel(LED_COUNT, led_pin, led_freq, led_dma, led_invert, led_brightness, led_channel, LED_STRIP_TYPE)
+    strip.begin();
+
+
+   try:
+        while True:
+            entrance = GPIO.input(24)
+            bed = GPIO.input(23)
+            if entrance == 1:
+                colorWipe(strip, Color(255, 0, 0))
+                colorWipe(strip, Color(0, 255, 0))
+                colorWipe(strip, Color(0, 0, 255))
+                time.sleep(15)  
+                theaterChase(strip, Color(127, 127, 127))
+                theaterChase(strip, Color(127,   0,   0))
+                theaterChase(strip, Color(  0,   0, 127))
+                time.sleep(15)
+                rainbow(strip)
+                rainbowCycle(strip)
+                theaterChaseRainbow(strip)
+            
+            elif entrance == 1:
+                 colorWipe(strip, Color(255, 0, 0))
+                 colorWipe(strip, Color(0, 255, 0))
+                 colorWipe(strip, Color(0, 0, 255))
+                 time.sleep(15)  
+                 theaterChase(strip, Color(127, 127, 127))
+                 theaterChase(strip, Color(127,   0,   0))
+                 theaterChase(strip, Color(  0,   0, 127))
+                 time.sleep(15)
+                 rainbow(strip)
+                 rainbowCycle(strip)
+                 theaterChaseRainbow(strip)
+
+    except KeyboardInterrupt:
+        if args.clear:
+            colorWipe(strip1, strip2, led_indexes, Color(0, 0, 0), 2)         
+
